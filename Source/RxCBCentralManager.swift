@@ -44,7 +44,7 @@ class RxCBCentralManager: RxCentralManagerType {
 
     @objc private class InternalDelegate: NSObject, CBCentralManagerDelegate {
         let didUpdateStateSubject = PublishSubject<BluetoothState>()
-        let willRestoreStateSubject = PublishSubject<[String: AnyObject]>()
+        let willRestoreStateSubject = BehaviorSubject<[String: AnyObject]?>(value: nil)
         let didDiscoverPeripheralSubject = PublishSubject<(RxPeripheralType, [String: AnyObject], NSNumber)>()
         let didConnectPerihperalSubject = PublishSubject<RxPeripheralType>()
         let didFailToConnectPeripheralSubject = PublishSubject<(RxPeripheralType, NSError?)>()
@@ -89,7 +89,10 @@ class RxCBCentralManager: RxCentralManagerType {
     }
     /// Observable which infroms when central manager is about to restore its state
     var rx_willRestoreState: Observable<[String: AnyObject]> {
-        return internalDelegate.willRestoreStateSubject
+        return internalDelegate.willRestoreStateSubject.flatMap {
+          guard let dict = $0 else { return Observable.empty() }
+          return Observable.just(dict)
+        }
     }
     /// Observable which infroms when central manage discovered peripheral
     var rx_didDiscoverPeripheral: Observable<(RxPeripheralType, [String: AnyObject], NSNumber)> {
