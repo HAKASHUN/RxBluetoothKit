@@ -129,17 +129,17 @@ public class Peripheral {
         }
         let observable = peripheral.rx_didDiscoverServices
         .flatMap { (_, error) -> Observable<[Service]> in
-            if let cachedServices = self.services where error == nil {
-                guard let identifiers = serviceUUIDs else { return Observable.just(cachedServices) }
-                let uuids = cachedServices.map { $0.service.uuid }
-                if Set(identifiers).isSubsetOf(Set(uuids)) {
-                    let filteredServices = cachedServices
-                        .filter { identifiers.contains($0.UUID)}
-                    return Observable.just(filteredServices)
-                }
-                return Observable.empty()
+            guard let cachedServices = self.services where error == nil else {
+                throw BluetoothError.ServicesDiscoveryFailed(self, error)
             }
-            throw BluetoothError.ServicesDiscoveryFailed(self, error)
+            guard let identifiers = serviceUUIDs else { return Observable.just(cachedServices) }
+            let uuids = cachedServices.map { $0.service.uuid }
+            if Set(identifiers).isSubsetOf(Set(uuids)) {
+                let filteredServices = cachedServices
+                    .filter { identifiers.contains($0.UUID)}
+                return Observable.just(filteredServices)
+            }
+            return Observable.empty()
         }
         .take(1)
 
@@ -245,11 +245,11 @@ public class Peripheral {
         return peripheral
             .rx_didWriteValueForCharacteristic
             .filter { return $0.0 == characteristic.characteristic }
-            .flatMap { (rxCharacteristic, error) -> Observable<Characteristic> in
+            .map { (rxCharacteristic, error) -> Characteristic in
                 if let error = error {
                     throw BluetoothError.CharacteristicWriteFailed(characteristic, error)
                 }
-                return Observable.just(characteristic)
+                return characteristic
             }
     }
 
@@ -276,12 +276,11 @@ public class Peripheral {
                 switch type {
                 case .WithoutResponse:
                     disposable = self.ensureValidPeripheralState(Observable.just(characteristic)).subscribe(observer)
-                    self.peripheral.writeValue(data, forCharacteristic: characteristic.characteristic, type: type)
                 case .WithResponse:
                     disposable = self.ensureValidPeripheralState(self.monitorWriteForCharacteristic(characteristic).take(1))
                         .subscribe(observer)
-                    self.peripheral.writeValue(data, forCharacteristic: characteristic.characteristic, type: type)
                 }
+                self.peripheral.writeValue(data, forCharacteristic: characteristic.characteristic, type: type)
                 return AnonymousDisposable {
                     disposable.dispose()
                 }
@@ -298,11 +297,11 @@ public class Peripheral {
         let observable = peripheral
             .rx_didUpdateValueForCharacteristic
             .filter { $0.0 == characteristic.characteristic }
-            .flatMap { (rxCharacteristic, error) -> Observable<Characteristic> in
+            .map { (rxCharacteristic, error) -> Characteristic in
                 if let error = error {
                     throw BluetoothError.CharacteristicReadFailed(characteristic, error)
                 }
-                return Observable.just(characteristic)
+                return characteristic
             }
         return self.ensureValidPeripheralState(observable)
     }
@@ -340,11 +339,11 @@ public class Peripheral {
                 .rx_didUpdateNotificationStateForCharacteristic
                 .filter { $0.0 == characteristic.characteristic }
                 .take(1)
-                .flatMap { (rxCharacteristic, error) -> Observable<Characteristic> in
+                .map { (rxCharacteristic, error) -> Characteristic in
                     if let error = error {
                         throw BluetoothError.CharacteristicNotifyChangeFailed(characteristic, error)
                     }
-                    return Observable.just(characteristic)
+                    return characteristic
                 }
             return Observable.create { observer in
                 let disposable = self.ensureValidPeripheralState(observable).take(1).subscribe(observer)
@@ -385,10 +384,10 @@ public class Peripheral {
             .rx_didDiscoverDescriptorsForCharacteristic
             .filter { $0.0 == characteristic.characteristic }
             .take(1)
-            .flatMap { (cbCharacteristic, error) -> Observable<[Descriptor]> in
+            .map { (cbCharacteristic, error) -> [Descriptor] in
                 if let descriptors = cbCharacteristic.descriptors where error == nil {
-                    return Observable.just(descriptors.map {
-                        Descriptor(descriptor: $0, characteristic: characteristic) })
+                    return descriptors.map {
+                        Descriptor(descriptor: $0, characteristic: characteristic) }
                 }
                 throw BluetoothError.DescriptorsDiscoveryFailed(characteristic, error)
             }
@@ -412,11 +411,11 @@ public class Peripheral {
         return peripheral
             .rx_didWriteValueForDescriptor
             .filter { $0.0 == descriptor.descriptor }
-            .flatMap { (rxDescriptor, error) -> Observable<Descriptor> in
+            .map { (rxDescriptor, error) -> Descriptor in
                 if let error = error {
                     throw BluetoothError.DescriptorWriteFailed(descriptor, error)
                 }
-                return Observable.just(descriptor)
+                return descriptor
             }
     }
 
@@ -447,11 +446,11 @@ public class Peripheral {
     public func monitorValueUpdateForDescriptor(descriptor: Descriptor) -> Observable<Descriptor> {
         let observable = peripheral.rx_didUpdateValueForDescriptor
             .filter { $0.0 == descriptor.descriptor }
-            .flatMap { (rxDescriptor, error) -> Observable<Descriptor> in
+            .map { (rxDescriptor, error) -> Descriptor in
                 if let error = error {
                     throw BluetoothError.DescriptorReadFailed(descriptor, error)
                 }
-                return Observable.just(descriptor)
+                return descriptor
             }
         return self.ensureValidPeripheralState(observable)
     }
@@ -498,11 +497,11 @@ public class Peripheral {
     public func readRSSI() -> Observable<(Peripheral, Int)> {
         let observable = peripheral.rx_didReadRSSI
             .take(1)
-            .flatMap { (rssi, error) -> Observable<(Peripheral, Int)> in
+            .map { (rssi, error) -> (Peripheral, Int) in
                 if let error = error {
                     throw BluetoothError.PeripheralRSSIReadFailed(self, error)
                 }
-                return Observable.just(self, rssi)
+                return (self, rssi)
         }
         return Observable.create { observer in
             let disposable = self.ensureValidPeripheralState(observable).subscribe(observer)
