@@ -303,7 +303,7 @@ public class Peripheral {
      */
     public func readValueForCharacteristic(characteristic: Characteristic) -> Observable<Characteristic> {
 
-        let observable = elf.monitorValueUpdateForCharacteristic(characteristic).take(1)
+        let observable = self.monitorValueUpdateForCharacteristic(characteristic).take(1)
         return ensureValidStateAndCallIfNecessary(
             observable,
             call: { self.peripheral.readValueForCharacteristic(characteristic.characteristic) }
