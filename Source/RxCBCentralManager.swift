@@ -89,9 +89,9 @@ class RxCBCentralManager: RxCentralManagerType {
     }
     /// Observable which infroms when central manager is about to restore its state
     var rx_willRestoreState: Observable<[String: AnyObject]> {
-        return internalDelegate.willRestoreStateSubject.flatMap {
-          guard let dict = $0 else { return Observable.empty() }
-          return Observable.just(dict)
+        return internalDelegate.willRestoreStateSubject.flatMap { state -> Observable<[String: AnyObject]> in
+          guard let state = state else { return Observable.empty() }
+          return Observable.just(state)
         }
     }
     /// Observable which infroms when central manage discovered peripheral
