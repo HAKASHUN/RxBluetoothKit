@@ -45,6 +45,9 @@ protocol RxCharacteristicType {
 
     /// Characteristic service
     var service: RxServiceType { get }
+
+    /// True if the two characteristic objects considered equal
+    func isEqualTo(characteristic: RxCharacteristicType) -> Bool
 }
 
 /**
@@ -55,7 +58,7 @@ protocol RxCharacteristicType {
  - returns: True if characteristics are the same
  */
 func == (lhs: RxCharacteristicType, rhs: RxCharacteristicType) -> Bool {
-    return lhs.uuid == rhs.uuid
+    return lhs.isEqualTo(rhs)
 }
 
 /**

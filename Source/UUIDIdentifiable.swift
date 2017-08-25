@@ -19,46 +19,29 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-
 import Foundation
 import CoreBluetooth
-import RxSwift
 
-class RxCBCharacteristic: RxCharacteristicType {
-
-    let characteristic: CBCharacteristic
-
-    init(characteristic: CBCharacteristic) {
-        self.characteristic = characteristic
-    }
-
-    var uuid: CBUUID {
-        return characteristic.UUID
-    }
-    var value: NSData? {
-        return characteristic.value
-    }
-    var isNotifying: Bool {
-        return characteristic.isNotifying
-    }
-    var properties: CBCharacteristicProperties {
-        return characteristic.properties
-    }
-    var descriptors: [RxDescriptorType]? {
-        guard let descriptors = characteristic.descriptors else {
-            return nil
-        }
-        return descriptors.map {
-            RxCBDescriptor(descriptor: $0)
-        }
-    }
-    var service: RxServiceType {
-        return RxCBService(service: characteristic.service)
-    }
-
-    func isEqualTo(characteristic: RxCharacteristicType) -> Bool {
-        guard let rhs = characteristic as? RxCBCharacteristic else { return false }
-        return self.characteristic === rhs.characteristic
-    }
+protocol UUIDIdentifiable {
+  var UUID: CBUUID { get }
 }
 
+extension Characteristic: UUIDIdentifiable { }
+extension Service: UUIDIdentifiable { }
+
+/**
+ Filters an item list based on the provided UUID list. The items must conform to UUIDIdentifiable.
+ Only items returned whose UUID matches an item in the provided UUID list.
+ Each UUID should have at least one item matching in the items list. Otherwise the result is nil.
+ - uuids: a UUID list or nil
+ - items: items to be filtered
+ - Returns: the filtered item list
+ */
+func filterUUIDItems<T: UUIDIdentifiable>(uuids: [CBUUID]?, items: [T]) -> [T]? {
+  guard let uuids = uuids where !uuids.isEmpty else { return items }
+
+  let itemsUUIDs = items.map { $0.UUID }
+  let uuidsSet = Set(uuids)
+  guard uuidsSet.isSubsetOf(Set(itemsUUIDs)) else { return nil }
+  return items.filter { uuidsSet.contains($0.UUID) }
+}

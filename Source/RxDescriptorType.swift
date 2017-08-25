@@ -36,8 +36,11 @@ protocol RxDescriptorType {
 
     /// Descriptor's value
     var value: AnyObject? { get }
+
+    /// True if the two descriptor objects considered equal
+    func isEqualTo(descriptor: RxDescriptorType) -> Bool
 }
 
 func == (lhs: RxDescriptorType, rhs: RxDescriptorType) -> Bool {
-    return lhs.UUID == rhs.UUID
+    return lhs.isEqualTo(rhs)
 }
