@@ -141,13 +141,10 @@ public class Peripheral {
         }
         .take(1)
 
-        return Observable.create { observer in
-            let disposable = self.ensureValidPeripheralState(observable).subscribe(observer)
-            self.peripheral.discoverServices(serviceUUIDs)
-            return AnonymousDisposable {
-                disposable.dispose()
-            }
-        }
+      return ensureValidStateAndCallIfNecessary(
+        observable,
+        call: { self.peripheral.discoverServices(serviceUUIDs) }
+      )
     }
 
     /**
@@ -183,14 +180,10 @@ public class Peripheral {
                 return Observable.empty()
             }
             .take(1)
-
-        return Observable.create { observer in
-            let disposable = self.ensureValidPeripheralState(observable).subscribe(observer)
-            self.peripheral.discoverIncludedServices(includedServiceUUIDs, forService: service.service)
-            return AnonymousDisposable {
-                disposable.dispose()
-            }
-        }
+        return ensureValidStateAndCallIfNecessary(
+            observable,
+            call: { self.peripheral.discoverIncludedServices(includedServiceUUIDs, forService: service.service) }
+        )
     }
 
     // MARK: Characteristics
@@ -226,13 +219,10 @@ public class Peripheral {
             }
             .take(1)
 
-        return Observable.create { observer in
-            let disposable = self.ensureValidPeripheralState(observable).subscribe(observer)
-            self.peripheral.discoverCharacteristics(identifiers, forService: service.service)
-            return AnonymousDisposable {
-                disposable.dispose()
-            }
-        }
+        return ensureValidStateAndCallIfNecessary(
+            observable,
+            call: { self.peripheral.discoverCharacteristics(identifiers, forService: service.service) }
+        )
     }
 
     /**
@@ -242,7 +232,7 @@ public class Peripheral {
      It's **infinite** stream, so `.Complete` is never called.
      */
     public func monitorWriteForCharacteristic(characteristic: Characteristic) -> Observable<Characteristic> {
-        return peripheral
+        let observable = peripheral
             .rx_didWriteValueForCharacteristic
             .filter { return $0.0 == characteristic.characteristic }
             .map { (rxCharacteristic, error) -> Characteristic in
@@ -251,6 +241,7 @@ public class Peripheral {
                 }
                 return characteristic
             }
+        return ensureValidPeripheralState(observable)
     }
 
     /**
@@ -271,20 +262,17 @@ public class Peripheral {
     public func writeValue(data: NSData,
         forCharacteristic characteristic: Characteristic,
         type: CBCharacteristicWriteType) -> Observable<Characteristic> {
-            return Observable.create { observer in
-                let disposable: Disposable
-                switch type {
-                case .WithoutResponse:
-                    disposable = self.ensureValidPeripheralState(Observable.just(characteristic)).subscribe(observer)
-                case .WithResponse:
-                    disposable = self.ensureValidPeripheralState(self.monitorWriteForCharacteristic(characteristic).take(1))
-                        .subscribe(observer)
-                }
-                self.peripheral.writeValue(data, forCharacteristic: characteristic.characteristic, type: type)
-                return AnonymousDisposable {
-                    disposable.dispose()
-                }
+            let observable: Observable<Characteristic>
+            switch type {
+            case .WithoutResponse:
+                observable = Observable.just(characteristic)
+            case .WithResponse:
+                observable = self.monitorWriteForCharacteristic(characteristic).take(1)
             }
+        return ensureValidStateAndCallIfNecessary(
+          observable,
+          call: { self.peripheral.writeValue(data, forCharacteristic: characteristic.characteristic, type: type) }
+        )
     }
 
     /**
@@ -314,13 +302,12 @@ public class Peripheral {
      `.Complete` is emitted.
      */
     public func readValueForCharacteristic(characteristic: Characteristic) -> Observable<Characteristic> {
-        return Observable.create { observer in
-            let disosable = self.ensureValidPeripheralState(self.monitorValueUpdateForCharacteristic(characteristic).take(1)).subscribe(observer)
-            self.peripheral.readValueForCharacteristic(characteristic.characteristic)
-            return AnonymousDisposable {
-                disposable.dispose()
-            }
-        }
+
+        let observable = elf.monitorValueUpdateForCharacteristic(characteristic).take(1)
+        return ensureValidStateAndCallIfNecessary(
+            observable,
+            call: { self.peripheral.readValueForCharacteristic(characteristic.characteristic) }
+        )
     }
 
     /**
@@ -345,13 +332,10 @@ public class Peripheral {
                     }
                     return characteristic
                 }
-            return Observable.create { observer in
-                let disposable = self.ensureValidPeripheralState(observable).take(1).subscribe(observer)
-                self.peripheral.setNotifyValue(enabled, forCharacteristic: characteristic.characteristic)
-                return AnonymousDisposable {
-                    disposable.dispose()
-                }
-            }
+            return ensureValidStateAndCallIfNecessary(
+                observable,
+                call: { self.peripheral.setNotifyValue(enabled, forCharacteristic: characteristic.characteristic) }
+            )
     }
 
     /**
@@ -396,14 +380,10 @@ public class Peripheral {
                 }
                 throw BluetoothError.DescriptorsDiscoveryFailed(characteristic, error)
             }
-
-        return Observable.create { observer in
-            let disposable = self.ensureValidPeripheralState(observable).subscribe(observer)
-            self.peripheral.discoverDescriptorsForCharacteristic(characteristic.characteristic)
-            return AnonymousDisposable {
-                disposable.dispose()
-            }
-        }
+        return ensureValidStateAndCallIfNecessary(
+          observable,
+          call: { self.peripheral.discoverDescriptorsForCharacteristic(characteristic.characteristic) }
+        )
     }
 
     /**
@@ -413,7 +393,7 @@ public class Peripheral {
      It's **infinite** stream, so `.Complete` is never called.
      */
     public func monitorWriteForDescriptor(descriptor: Descriptor) -> Observable<Descriptor> {
-        return peripheral
+        let observable = peripheral
             .rx_didWriteValueForDescriptor
             .filter { $0.0 == descriptor.descriptor }
             .map { (rxDescriptor, error) -> Descriptor in
@@ -422,6 +402,7 @@ public class Peripheral {
                 }
                 return descriptor
             }
+        return ensureValidPeripheralState(observable)
     }
 
     /**
@@ -432,14 +413,19 @@ public class Peripheral {
      Immediately after that `.Complete` is emitted.
      */
     public func writeValue(data: NSData, forDescriptor descriptor: Descriptor) -> Observable<Descriptor> {
-        return Observable.create { observer in
-            let disposable = self.ensureValidPeripheralState(self.monitorWriteForDescriptor(descriptor).take(1))
-                .subscribe(observer)
-            self.peripheral.writeValue(data, forDescriptor: descriptor.descriptor)
-            return AnonymousDisposable {
-                disposable.dispose()
-            }
+        let monitorWrite = self.monitorWrite(for: descriptor).take(1)
+        return ensureValidStateAndCallIfNecessary(
+            monitorWrite,
+            call: { self.peripheral.writeValue(data, forDescriptor: descriptor.descriptor) }
+        )
+    }
+
+    func ensureValidStateAndCallIfNecessary<T>(observable: Observable<T>, call: () -> Void) -> Observable<T> {
+        let operation = Observable<T>.deferred {
+            call()
+            return Observable.Empty()
         }
+        return ensureValidPeripheralState(Observable.merge([observable, operation]))
     }
 
     /**
@@ -468,13 +454,11 @@ public class Peripheral {
      `.Complete` is emitted.
      */
     public func readValueForDescriptor(descriptor: Descriptor) -> Observable<Descriptor> {
-        return Observable.create { observer in
-            let disposable = self.monitorValueUpdateForDescriptor(descriptor).take(1).subscribe(observer)
-            self.peripheral.readValueForDescriptor(descriptor.descriptor)
-            return AnonymousDisposable {
-                disposable.dispose()
-            }
-        }
+        let observable = self.monitorValueUpdateForDescriptor(descriptor).take(1)
+        return ensureValidStateAndCallIfNecessary(
+            observable,
+            call: { self.peripheral.readValueForDescriptor(descriptor.descriptor) }
+        )
     }
 
     /**
@@ -483,15 +467,10 @@ public class Peripheral {
      - returns: Source observable which listens on state chnage errors as well
      */
     func ensureValidPeripheralState<T>(observable: Observable<T>) -> Observable<T> {
-        return Observable.deferred {
-            guard self.isConnected else {
-                throw BluetoothError.PeripheralDisconnected(self, nil)
-            }
-            return Observable.absorb(
-                self.manager.ensurePeripheralIsConnected(self),
-                self.manager.ensureState(.PoweredOn, observable: observable)
-            )
-        }
+        return Observable<T>.absorb(
+            self.manager.ensurePeripheralIsConnected(self),
+            self.manager.ensureState(.PoweredOn, observable: observable)
+        )
     }
 
     /**
@@ -508,13 +487,10 @@ public class Peripheral {
                 }
                 return (self, rssi)
         }
-        return Observable.create { observer in
-            let disposable = self.ensureValidPeripheralState(observable).subscribe(observer)
-            self.peripheral.readRSSI()
-            return AnonymousDisposable {
-                disposable.dispose()
-            }
-        }
+        return ensureValidStateAndCallIfNecessary(
+            observable,
+            call: { self.peripheral.readRSSI() }
+        )
     }
 
     /**
@@ -522,7 +498,8 @@ public class Peripheral {
      - returns: Observable that emits tuples: `(Peripheral, String?)` when name has changed. It's `optional String` because peripheral could also lost his name. It's **infinite** stream of values, so `.Complete` is never emitted.
      */
     public func monitorUpdateName() -> Observable<(Peripheral, String?)> {
-        return peripheral.rx_didUpdateName.map { return (self, $0) }
+        let observable = peripheral.rx_didUpdateName.map { return (self, $0) }
+        return ensureValidPeripheralState(observable)
     }
 
     /**
