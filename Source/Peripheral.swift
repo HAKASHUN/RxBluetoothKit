@@ -139,7 +139,7 @@ public class Peripheral {
                 }
                 return Observable.empty()
             }
-            return Observable.error(BluetoothError.ServicesDiscoveryFailed(self, error))
+            throw BluetoothError.ServicesDiscoveryFailed(self, error)
         }
         .take(1)
 
@@ -175,7 +175,7 @@ public class Peripheral {
             .filter { $0.0 == service.service }
             .flatMap { (service, error) -> Observable<[Service]> in
                 guard let includedRxServices = service.includedServices where error == nil else {
-                    return Observable.error(BluetoothError.IncludedServicesDiscoveryFailed(self, error))
+                    throw BluetoothError.IncludedServicesDiscoveryFailed(self, error)
                 }
                 let includedServices = includedRxServices.map { Service(peripheral: self, service: $0) }
                 guard let includedServiceUUIDs = includedServiceUUIDs else { return Observable.just(includedServices) }
@@ -216,7 +216,7 @@ public class Peripheral {
             .filter { $0.0 == service.service }
             .flatMap { (cbService, error) -> Observable<[Characteristic]> in
                 guard let rxCharacteristics = cbService.characteristics where error == nil else {
-                    return Observable.error(BluetoothError.CharacteristicsDiscoveryFailed(service, error))
+                    throw BluetoothError.CharacteristicsDiscoveryFailed(service, error)
                 }
                 let characteristics = rxCharacteristics.map { Characteristic(characteristic: $0, service: service) }
                 guard let characteristicIdentifiers = identifiers else { return Observable.just(characteristics) }
@@ -247,7 +247,7 @@ public class Peripheral {
             .filter { return $0.0 == characteristic.characteristic }
             .flatMap { (rxCharacteristic, error) -> Observable<Characteristic> in
                 if let error = error {
-                    return Observable.error(BluetoothError.CharacteristicWriteFailed(characteristic, error))
+                    throw BluetoothError.CharacteristicWriteFailed(characteristic, error)
                 }
                 return Observable.just(characteristic)
             }
@@ -300,7 +300,7 @@ public class Peripheral {
             .filter { $0.0 == characteristic.characteristic }
             .flatMap { (rxCharacteristic, error) -> Observable<Characteristic> in
                 if let error = error {
-                    return Observable.error(BluetoothError.CharacteristicReadFailed(characteristic, error))
+                    throw BluetoothError.CharacteristicReadFailed(characteristic, error)
                 }
                 return Observable.just(characteristic)
             }
@@ -342,7 +342,7 @@ public class Peripheral {
                 .take(1)
                 .flatMap { (rxCharacteristic, error) -> Observable<Characteristic> in
                     if let error = error {
-                        return Observable.error(BluetoothError.CharacteristicNotifyChangeFailed(characteristic, error))
+                        throw BluetoothError.CharacteristicNotifyChangeFailed(characteristic, error)
                     }
                     return Observable.just(characteristic)
                 }
@@ -390,7 +390,7 @@ public class Peripheral {
                     return Observable.just(descriptors.map {
                         Descriptor(descriptor: $0, characteristic: characteristic) })
                 }
-                return Observable.error(BluetoothError.DescriptorsDiscoveryFailed(characteristic, error))
+                throw BluetoothError.DescriptorsDiscoveryFailed(characteristic, error)
             }
 
         return Observable.create { observer in
@@ -414,7 +414,7 @@ public class Peripheral {
             .filter { $0.0 == descriptor.descriptor }
             .flatMap { (rxDescriptor, error) -> Observable<Descriptor> in
                 if let error = error {
-                    return Observable.error(BluetoothError.DescriptorWriteFailed(descriptor, error))
+                    throw BluetoothError.DescriptorWriteFailed(descriptor, error)
                 }
                 return Observable.just(descriptor)
             }
@@ -449,7 +449,7 @@ public class Peripheral {
             .filter { $0.0 == descriptor.descriptor }
             .flatMap { (rxDescriptor, error) -> Observable<Descriptor> in
                 if let error = error {
-                    return Observable.error(BluetoothError.DescriptorReadFailed(descriptor, error))
+                    throw BluetoothError.DescriptorReadFailed(descriptor, error)
                 }
                 return Observable.just(descriptor)
             }
@@ -481,7 +481,7 @@ public class Peripheral {
     func ensureValidPeripheralState<T>(observable: Observable<T>) -> Observable<T> {
         return Observable.deferred {
             guard self.isConnected else {
-                return Observable.error(BluetoothError.PeripheralDisconnected(self, nil))
+                throw BluetoothError.PeripheralDisconnected(self, nil)
             }
             return Observable.absorb(
                 self.manager.ensurePeripheralIsConnected(self),
@@ -500,7 +500,7 @@ public class Peripheral {
             .take(1)
             .flatMap { (rssi, error) -> Observable<(Peripheral, Int)> in
                 if let error = error {
-                    return Observable.error(BluetoothError.PeripheralRSSIReadFailed(self, error))
+                    throw BluetoothError.PeripheralRSSIReadFailed(self, error)
                 }
                 return Observable.just(self, rssi)
         }

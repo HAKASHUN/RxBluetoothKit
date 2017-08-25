@@ -241,8 +241,8 @@ public class BluetoothManager {
                 .filter { $0.0 == peripheral.peripheral }
                 .take(1)
                 .flatMap { (peripheral, error) -> Observable<Peripheral> in
-                    Observable.error(BluetoothError.PeripheralConnectionFailed(
-                        Peripheral(manager: self, peripheral: peripheral), error))
+                    throw BluetoothError.PeripheralConnectionFailed(
+                        Peripheral(manager: self, peripheral: peripheral), error)
             }
 
             let observable = Observable<Peripheral>.create { observer in
@@ -354,12 +354,12 @@ public class BluetoothManager {
     func ensurePeripheralIsConnected<T>(peripheral: Peripheral) -> Observable<T> {
         return Observable.deferred {
             if !peripheral.isConnected {
-                return Observable.error(BluetoothError.PeripheralDisconnected(peripheral, nil))
+                throw BluetoothError.PeripheralDisconnected(peripheral, nil)
             }
             return self.centralManager.rx_didDisconnectPeripheral
                 .filter { $0.0 == peripheral.peripheral }
                 .flatMap { (_, error) -> Observable<T> in
-                    return Observable.error(BluetoothError.PeripheralDisconnected(peripheral, error))
+                    throw BluetoothError.PeripheralDisconnected(peripheral, error)
             }
         }
     }
