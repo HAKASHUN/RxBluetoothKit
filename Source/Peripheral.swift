@@ -141,9 +141,9 @@ public class Peripheral {
         }
         .take(1)
 
-      return ensureValidStateAndCallIfNecessary(
+      return ensureValidPeripheralStateAndCallIfSucceeded(
         observable,
-        call: { self.peripheral.discoverServices(serviceUUIDs) }
+        postSubscriptionCall: { self.peripheral.discoverServices(serviceUUIDs) }
       )
     }
 
@@ -180,9 +180,9 @@ public class Peripheral {
                 return Observable.empty()
             }
             .take(1)
-        return ensureValidStateAndCallIfNecessary(
+        return ensureValidPeripheralStateAndCallIfSucceeded(
             observable,
-            call: { self.peripheral.discoverIncludedServices(includedServiceUUIDs, forService: service.service) }
+            postSubscriptionCall: { self.peripheral.discoverIncludedServices(includedServiceUUIDs, forService: service.service) }
         )
     }
 
@@ -219,9 +219,9 @@ public class Peripheral {
             }
             .take(1)
 
-        return ensureValidStateAndCallIfNecessary(
+        return ensureValidPeripheralStateAndCallIfSucceeded(
             observable,
-            call: { self.peripheral.discoverCharacteristics(identifiers, forService: service.service) }
+            postSubscriptionCall: { self.peripheral.discoverCharacteristics(identifiers, forService: service.service) }
         )
     }
 
@@ -269,9 +269,9 @@ public class Peripheral {
             case .WithResponse:
                 observable = self.monitorWriteForCharacteristic(characteristic).take(1)
             }
-        return ensureValidStateAndCallIfNecessary(
+        return ensureValidPeripheralStateAndCallIfSucceeded(
           observable,
-          call: { self.peripheral.writeValue(data, forCharacteristic: characteristic.characteristic, type: type) }
+          postSubscriptionCall: { self.peripheral.writeValue(data, forCharacteristic: characteristic.characteristic, type: type) }
         )
     }
 
@@ -304,9 +304,9 @@ public class Peripheral {
     public func readValueForCharacteristic(characteristic: Characteristic) -> Observable<Characteristic> {
 
         let observable = self.monitorValueUpdateForCharacteristic(characteristic).take(1)
-        return ensureValidStateAndCallIfNecessary(
+        return ensureValidPeripheralStateAndCallIfSucceeded(
             observable,
-            call: { self.peripheral.readValueForCharacteristic(characteristic.characteristic) }
+            postSubscriptionCall: { self.peripheral.readValueForCharacteristic(characteristic.characteristic) }
         )
     }
 
@@ -332,9 +332,9 @@ public class Peripheral {
                     }
                     return characteristic
                 }
-            return ensureValidStateAndCallIfNecessary(
+            return ensureValidPeripheralStateAndCallIfSucceeded(
                 observable,
-                call: { self.peripheral.setNotifyValue(enabled, forCharacteristic: characteristic.characteristic) }
+                postSubscriptionCall: { self.peripheral.setNotifyValue(enabled, forCharacteristic: characteristic.characteristic) }
             )
     }
 
@@ -380,9 +380,9 @@ public class Peripheral {
                 }
                 throw BluetoothError.DescriptorsDiscoveryFailed(characteristic, error)
             }
-        return ensureValidStateAndCallIfNecessary(
+        return ensureValidPeripheralStateAndCallIfSucceeded(
           observable,
-          call: { self.peripheral.discoverDescriptorsForCharacteristic(characteristic.characteristic) }
+          postSubscriptionCall: { self.peripheral.discoverDescriptorsForCharacteristic(characteristic.characteristic) }
         )
     }
 
@@ -414,15 +414,15 @@ public class Peripheral {
      */
     public func writeValue(data: NSData, forDescriptor descriptor: Descriptor) -> Observable<Descriptor> {
         let monitorWrite = self.monitorWrite(for: descriptor).take(1)
-        return ensureValidStateAndCallIfNecessary(
+        return ensureValidPeripheralStateAndCallIfSucceeded(
             monitorWrite,
-            call: { self.peripheral.writeValue(data, forDescriptor: descriptor.descriptor) }
+            postSubscriptionCall: { self.peripheral.writeValue(data, forDescriptor: descriptor.descriptor) }
         )
     }
 
-    func ensureValidStateAndCallIfNecessary<T>(observable: Observable<T>, call: () -> Void) -> Observable<T> {
+    func ensureValidPeripheralStateAndCallIfSucceeded<T>(observable: Observable<T>, postSubscriptionCall: () -> Void) -> Observable<T> {
         let operation = Observable<T>.deferred {
-            call()
+            postSubscriptionCall()
             return Observable.Empty()
         }
         return ensureValidPeripheralState(Observable.merge([observable, operation]))
@@ -455,9 +455,9 @@ public class Peripheral {
      */
     public func readValueForDescriptor(descriptor: Descriptor) -> Observable<Descriptor> {
         let observable = self.monitorValueUpdateForDescriptor(descriptor).take(1)
-        return ensureValidStateAndCallIfNecessary(
+        return ensureValidPeripheralStateAndCallIfSucceeded(
             observable,
-            call: { self.peripheral.readValueForDescriptor(descriptor.descriptor) }
+            postSubscriptionCall: { self.peripheral.readValueForDescriptor(descriptor.descriptor) }
         )
     }
 
@@ -487,9 +487,9 @@ public class Peripheral {
                 }
                 return (self, rssi)
         }
-        return ensureValidStateAndCallIfNecessary(
+        return ensureValidPeripheralStateAndCallIfSucceeded(
             observable,
-            call: { self.peripheral.readRSSI() }
+            postSubscriptionCall: { self.peripheral.readRSSI() }
         )
     }
 
