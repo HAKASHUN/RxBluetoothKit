@@ -32,6 +32,9 @@ protocol RxPeripheralType {
     /// Peripheral's name
     var name: String? { get }
 
+    /// Underlying `CBPeripheral` instance
+    var peripheral: CBPeripheral { get }
+
     /// Peripheral's identifier
     var identifier: NSUUID { get }
 

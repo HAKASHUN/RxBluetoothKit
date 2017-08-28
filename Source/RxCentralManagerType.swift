@@ -44,7 +44,10 @@ protocol RxCentralManagerType {
 
     /// Current state of Central Manager
     var state: BluetoothState { get }
-    
+
+    /// Underlying `CBPeripheral` instance
+    var centralManager: CBCentralManager { get }
+
     /**
      Start scanning for peripherals with specified services. Results will be available on rx_didDiscoverPeripheral
      observable.

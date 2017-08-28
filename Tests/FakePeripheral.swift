@@ -35,7 +35,9 @@ class FakePeripheral: RxPeripheralType {
     var rx_state: Observable<CBPeripheralState> = .never()
     var services: [RxServiceType]? = nil
     var identifier: NSUUID = NSUUID()
-
+    var peripheral: CBPeripheral {
+        fatalError("Peripheral not available")
+    }
     var RSSI: Int? = nil
 
 

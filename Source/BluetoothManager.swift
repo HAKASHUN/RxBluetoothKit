@@ -60,6 +60,9 @@ public class BluetoothManager {
     /// Queue of scan operations which are waiting for an execution
     private var scanQueue: [ScanOperation] = []
 
+    public var manager: CBCentralManager {
+      return centralManager.centralManager
+    }
 
     // MARK: Initialization
 

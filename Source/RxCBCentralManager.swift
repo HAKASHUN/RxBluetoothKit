@@ -29,7 +29,7 @@ import CoreBluetooth
  to hide all implementation details.
  */
 class RxCBCentralManager: RxCentralManagerType {
-    private let centralManager: CBCentralManager
+    let centralManager: CBCentralManager
     private let internalDelegate = InternalDelegate()
 
     /**
