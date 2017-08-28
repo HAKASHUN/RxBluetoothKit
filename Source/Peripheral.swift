@@ -420,7 +420,7 @@ public class Peripheral {
      Immediately after that `.Complete` is emitted.
      */
     public func writeValue(data: NSData, forDescriptor descriptor: Descriptor) -> Observable<Descriptor> {
-        let monitorWrite = self.monitorWrite(for: descriptor).take(1)
+        let monitorWrite = self.monitorWriteForDescriptor(descriptor).take(1)
         return ensureValidPeripheralStateAndCallIfSucceeded(
             monitorWrite,
             postSubscriptionCall: { self.peripheral.writeValue(data, forDescriptor: descriptor.descriptor) }
@@ -430,9 +430,9 @@ public class Peripheral {
     func ensureValidPeripheralStateAndCallIfSucceeded<T>(observable: Observable<T>, postSubscriptionCall: () -> Void) -> Observable<T> {
         let operation = Observable<T>.deferred {
             postSubscriptionCall()
-            return Observable.Empty()
+            return Observable.empty()
         }
-        return ensureValidPeripheralState(Observable.merge([observable, operation]))
+        return ensureValidPeripheralState(Observable.of(observable, operation).merge())
     }
 
     /**

@@ -42,9 +42,9 @@ extension ObservableType {
                     disposable.dispose()
                 }
             }
-            _ = disposable.insert(a.subscribe(innerObserver))
-            if !disposable.isDisposed {
-                _ = disposable.insert(b.subscribe(innerObserver))
+            _ = disposable.addDisposable(a.subscribe(innerObserver))
+            if !disposable.disposed {
+                _ = disposable.addDisposable(b.subscribe(innerObserver))
             }
             return disposable
         }
