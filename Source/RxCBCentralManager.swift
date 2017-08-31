@@ -22,6 +22,7 @@
 
 import Foundation
 import RxSwift
+import RxCocoa
 import CoreBluetooth
 
 /**
@@ -43,17 +44,13 @@ class RxCBCentralManager: RxCentralManagerType {
     }
 
     @objc private class InternalDelegate: NSObject, CBCentralManagerDelegate {
-        let didUpdateStateSubject = PublishSubject<BluetoothState>()
         let willRestoreStateSubject = BehaviorSubject<[String: AnyObject]?>(value: nil)
         let didDiscoverPeripheralSubject = PublishSubject<(RxPeripheralType, [String: AnyObject], NSNumber)>()
         let didConnectPerihperalSubject = PublishSubject<RxPeripheralType>()
         let didFailToConnectPeripheralSubject = PublishSubject<(RxPeripheralType, NSError?)>()
         let didDisconnectPeripheral = PublishSubject<(RxPeripheralType, NSError?)>()
 
-        @objc func centralManagerDidUpdateState(central: CBCentralManager) {
-            guard let bleState = BluetoothState(rawValue: central.state.rawValue) else { return }
-            didUpdateStateSubject.onNext(bleState)
-        }
+        @objc func centralManagerDidUpdateState(central: CBCentralManager) { }
 
         @objc func centralManager(central: CBCentralManager, willRestoreState dict: [String: AnyObject]) {
             willRestoreStateSubject.onNext(dict)
@@ -85,7 +82,7 @@ class RxCBCentralManager: RxCentralManagerType {
 
     /// Observable which infroms when central manager did change its state
     var rx_didUpdateState: Observable<BluetoothState> {
-        return internalDelegate.didUpdateStateSubject
+        return centralManager.rx_didUpdateState
     }
     /// Observable which infroms when central manager is about to restore its state
     var rx_willRestoreState: Observable<[String: AnyObject]> {

@@ -91,6 +91,7 @@
 		26752FA61D89C630003D8D38 /* BluetoothState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26EF38C81D86EE1F00F9F468 /* BluetoothState.swift */; };
 		26EF38C91D86EE1F00F9F468 /* BluetoothState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26EF38C81D86EE1F00F9F468 /* BluetoothState.swift */; };
 		26F3034B1CF0D49D00D74EBF /* RestoredState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26F3034A1CF0D49D00D74EBF /* RestoredState.swift */; };
+		6D5458E51F57DE7E002BA62A /* CBCentralManager+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5458E41F57DE7E002BA62A /* CBCentralManager+Rx.swift */; };
 		6D5F14071F5047B800F69826 /* UUIDIdentifiable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5F14061F5047B800F69826 /* UUIDIdentifiable.swift */; };
 		A10F298A1CDCD6E100593284 /* RxSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2666FE5A1CCE65CD005E81CE /* RxSwift.framework */; };
 		A10F298B1CDCD6E400593284 /* RxSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2666FE5E1CCE65EE005E81CE /* RxSwift.framework */; };
@@ -169,6 +170,7 @@
 		2666FE5E1CCE65EE005E81CE /* RxSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = RxSwift.framework; path = Carthage/Build/Mac/RxSwift.framework; sourceTree = SOURCE_ROOT; };
 		26EF38C81D86EE1F00F9F468 /* BluetoothState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BluetoothState.swift; sourceTree = "<group>"; };
 		26F3034A1CF0D49D00D74EBF /* RestoredState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RestoredState.swift; sourceTree = "<group>"; };
+		6D5458E41F57DE7E002BA62A /* CBCentralManager+Rx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CBCentralManager+Rx.swift"; sourceTree = "<group>"; };
 		6D5F14061F5047B800F69826 /* UUIDIdentifiable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UUIDIdentifiable.swift; sourceTree = "<group>"; };
 		A10F29901CDCD72200593284 /* RxTests.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = RxTests.framework; path = Carthage/Build/Mac/RxTests.framework; sourceTree = SOURCE_ROOT; };
 		A10F29911CDCD72200593284 /* Quick.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Quick.framework; path = Carthage/Build/Mac/Quick.framework; sourceTree = SOURCE_ROOT; };
@@ -264,13 +266,14 @@
 		265CD5FA1CBED323007120AB /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				A1299C0D1CBE3DEE005DEA5B /* BluetoothError.swift */,
+				A1299C0F1CBE3DEE005DEA5B /* Boxes.swift */,
+				6D5458E41F57DE7E002BA62A /* CBCentralManager+Rx.swift */,
+				A1299C111CBE3DEE005DEA5B /* CollectionUtils.swift */,
+				A1299C131CBE3DEE005DEA5B /* Observable+Absorb.swift */,
+				A1299C141CBE3DEE005DEA5B /* Observable+From.swift */,
 				A1299C151CBE3DEE005DEA5B /* Observable+QueueSubscribeOn.swift */,
 				A1299C241CBE3DEE005DEA5B /* Unimplemented.swift */,
-				A1299C141CBE3DEE005DEA5B /* Observable+From.swift */,
-				A1299C131CBE3DEE005DEA5B /* Observable+Absorb.swift */,
-				A1299C111CBE3DEE005DEA5B /* CollectionUtils.swift */,
-				A1299C0F1CBE3DEE005DEA5B /* Boxes.swift */,
-				A1299C0D1CBE3DEE005DEA5B /* BluetoothError.swift */,
 				6D5F14061F5047B800F69826 /* UUIDIdentifiable.swift */,
 			);
 			name = Shared;
@@ -662,6 +665,7 @@
 				2666FE3D1CCE4732005E81CE /* RxCBCharacteristic.swift in Sources */,
 				2666FE3C1CCE4732005E81CE /* RxCharacteristicType.swift in Sources */,
 				2666FE351CCE4732005E81CE /* Peripheral.swift in Sources */,
+				6D5458E51F57DE7E002BA62A /* CBCentralManager+Rx.swift in Sources */,
 				2666FE331CCE4732005E81CE /* RxPeripheralType.swift in Sources */,
 				2666FE441CCE4732005E81CE /* Boxes.swift in Sources */,
 				2666FE311CCE4732005E81CE /* RxCBDescriptor.swift in Sources */,
