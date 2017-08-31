@@ -20,5 +20,6 @@ Pod::Spec.new do |s|
 
   s.source_files = 'Source/*.swift'
   s.frameworks   = 'CoreBluetooth'
-  s.dependency 'RxSwift', '2.6.0'
+  s.dependency 'RxSwift', '2.6.1'
+  s.dependency 'RxCocoa', '2.6.1'
 end
