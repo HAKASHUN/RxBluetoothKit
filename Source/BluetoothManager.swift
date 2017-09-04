@@ -204,7 +204,10 @@ public class BluetoothManager {
      */
     public var rx_state: Observable<BluetoothState> {
         return Observable.deferred {
-            return self.centralManager.rx_didUpdateState.startWith(self.centralManager.state)
+            return Observable.just(()).observeOn(MainScheduler.instance)
+              .flatMapLatest {[unowned self] in
+                return self.centralManager.rx_didUpdateState.startWith(self.centralManager.state)
+              }
         }
     }
 
