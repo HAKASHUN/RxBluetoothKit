@@ -44,7 +44,7 @@ class RxCBCentralManager: RxCentralManagerType {
     }
 
     @objc private class InternalDelegate: NSObject, CBCentralManagerDelegate {
-        let willRestoreStateSubject = BehaviorSubject<[String: AnyObject]?>(value: nil)
+        let willRestoreStateSubject = ReplaySubject<[String: Any]>.create(bufferSize: 1)
         let didDiscoverPeripheralSubject = PublishSubject<(RxPeripheralType, [String: AnyObject], NSNumber)>()
         let didConnectPerihperalSubject = PublishSubject<RxPeripheralType>()
         let didFailToConnectPeripheralSubject = PublishSubject<(RxPeripheralType, NSError?)>()
@@ -86,10 +86,7 @@ class RxCBCentralManager: RxCentralManagerType {
     }
     /// Observable which infroms when central manager is about to restore its state
     var rx_willRestoreState: Observable<[String: AnyObject]> {
-        return internalDelegate.willRestoreStateSubject.flatMap { state -> Observable<[String: AnyObject]> in
-          guard let state = state else { return Observable.empty() }
-          return Observable.just(state)
-        }
+        return internalDelegate.willRestoreStateSubject
     }
     /// Observable which infroms when central manage discovered peripheral
     var rx_didDiscoverPeripheral: Observable<(RxPeripheralType, [String: AnyObject], NSNumber)> {
