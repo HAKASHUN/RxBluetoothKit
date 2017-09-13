@@ -44,7 +44,7 @@ class RxCBCentralManager: RxCentralManagerType {
     }
 
     @objc private class InternalDelegate: NSObject, CBCentralManagerDelegate {
-        let willRestoreStateSubject = ReplaySubject<[String: Any]>.create(bufferSize: 1)
+        let willRestoreStateSubject = ReplaySubject<[String: AnyObject]>.create(bufferSize: 1)
         let didDiscoverPeripheralSubject = PublishSubject<(RxPeripheralType, [String: AnyObject], NSNumber)>()
         let didConnectPerihperalSubject = PublishSubject<RxPeripheralType>()
         let didFailToConnectPeripheralSubject = PublishSubject<(RxPeripheralType, NSError?)>()
